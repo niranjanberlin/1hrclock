@@ -1,0 +1,766 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The 5-Minute Clock</title>
+  <style>
+    :root {
+      --bg: #090e1c;
+      --panel: #111a2e;
+      --ink: #f4f7ff;
+      --muted: #91a0bb;
+      --aqua: #64e6c8;
+      --indigo: #9195fa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 16% 6%, #182846, transparent 33%),
+        radial-gradient(circle at 100% 80%, #132a34, transparent 36%),
+        var(--bg);
+      color: var(--ink);
+      font-family: Inter, system-ui, Arial, sans-serif;
+    }
+
+    .app {
+      max-width: 1110px;
+      margin: auto;
+      padding: 32px 22px 40px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .19em;
+      color: var(--aqua);
+    }
+
+    h1 {
+      font-size: clamp(30px, 4vw, 46px);
+      letter-spacing: -.05em;
+      margin: 9px 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 15px;
+      color: #b7c4d8;
+      line-height: 1.5;
+    }
+
+    .top-pill {
+      border: 1px solid #3e5b69;
+      background: #142a36;
+      color: #b1f8e7;
+      border-radius: 100px;
+      padding: 11px 16px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 20px;
+    }
+
+    .glass {
+      background: linear-gradient(145deg, #152035, #0d1525);
+      border: 1px solid #2c3a50;
+      border-radius: 25px;
+      box-shadow: 0 18px 65px #02091555;
+    }
+
+    .clock-card {
+      padding: 18px 19px 23px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clock-wrap {
+      width: min(100%, 495px);
+      aspect-ratio: 1;
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .arc {
+      transition: fill .22s;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .arc:focus-visible {
+      stroke: white;
+      stroke-width: 3;
+    }
+
+    .arc.rest { fill: #25334b; }
+    .arc.current { fill: #888cf1; }
+    .arc.done { fill: #62e1c2; }
+
+    .numbers {
+      fill: #91a0ba;
+      font-size: 17px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .center-disc {
+      fill: #121c30;
+      stroke: #283752;
+      stroke-width: 2;
+    }
+
+    .clock-copy {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      width: 66%;
+      pointer-events: none;
+    }
+
+    .clock-eyebrow {
+      color: #9dacc4;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .time {
+      font-size: clamp(39px, 6vw, 69px);
+      font-weight: 800;
+      letter-spacing: -.07em;
+      font-variant-numeric: tabular-nums;
+      margin: 8px 0;
+    }
+
+    .clock-sub {
+      font-size: 13px;
+      color: #9cb1c8;
+      font-weight: 600;
+    }
+
+    .timer-status {
+      margin-top: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      color: #c5d4e8;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--aqua);
+      border-radius: 50%;
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-top: -6px;
+      position: relative;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+      transition: transform .15s, background .15s;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    button:focus-visible {
+      outline: 3px solid #a7f5e5;
+      outline-offset: 3px;
+    }
+
+    .btn {
+      border-radius: 13px;
+      border: 1px solid #334660;
+      min-height: 44px;
+      padding: 12px 17px;
+      color: #f1f7ff;
+      background: #24324a;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .btn.primary {
+      border-color: #5de1c3;
+      background: var(--aqua);
+      color: #07251f;
+      min-width: 138px;
+    }
+
+    .btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .hint {
+      text-align: center;
+      color: #91a0b9;
+      font-size: 12px;
+      line-height: 1.6;
+      margin: 13px 10px 0;
+    }
+
+    .side {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: .17em;
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      font-size: 26px;
+      letter-spacing: -.04em;
+      margin: 10px 0;
+    }
+
+    .description {
+      font-size: 14px;
+      color: #a6b6cc;
+      line-height: 1.6;
+      margin: 3px 0 18px;
+    }
+
+    .metric {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin: 3px 0 12px;
+    }
+
+    .metric strong {
+      font-size: 42px;
+      letter-spacing: -.05em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric span {
+      color: #9aadc7;
+      font-size: 13px;
+    }
+
+    .progress-track {
+      height: 9px;
+      background: #27354b;
+      overflow: hidden;
+      border-radius: 15px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6ee7c5, #9e9bff);
+      width: 0;
+      transition: width .25s;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 22px 0 20px;
+    }
+
+    .block {
+      min-height: 62px;
+      border: 1px solid #324259;
+      background: #1a2940;
+      border-radius: 13px;
+      color: #96a6c0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+
+    .block .num {
+      font-size: 19px;
+      font-weight: 850;
+    }
+
+    .block .small {
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .block.now {
+      background: #393c70;
+      border-color: #8b91ff;
+      color: white;
+    }
+
+    .block.done {
+      background: #183f40;
+      border-color: #55bda9;
+      color: #b8ffeb;
+    }
+
+    .message {
+      padding: 14px 15px;
+      background: #202d42;
+      border: 1px solid #394760;
+      border-radius: 13px;
+      color: #d6e5f4;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: auto;
+    }
+
+    .message strong { color: #9df0d8; }
+
+    .copy-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 17px;
+      border-top: 1px solid #344056;
+      flex-wrap: wrap;
+    }
+
+    .copy-row span {
+      color: #a5b4c7;
+      font-size: 12px;
+    }
+
+    .copy-btn {
+      border: 1px solid #6874ab;
+      color: #e2e2ff;
+      background: #2a3051;
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #7b8da6;
+      text-align: center;
+      padding-top: 23px;
+    }
+
+    @media (max-width: 780px) {
+      .app { padding: 23px 13px; }
+      .layout { grid-template-columns: 1fr; }
+      .clock-card { padding: 10px 12px 23px; }
+      .side { padding: 24px; }
+      .top-pill { display: none; }
+      .clock-wrap { width: min(100%, 470px); }
+    }
+
+    @media (max-width: 400px) {
+      .btn { font-size: 12px; padding: 10px 12px; }
+      .time { font-size: 43px; }
+      .numbers { font-size: 15px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header class="top">
+      <div>
+        <div class="brand">Focus Lab / Time Blocks</div>
+        <h1>The 5-Minute Clock</h1>
+        <p class="subtitle">
+          Don't think about one whole hour.
+          Win the next five minutes.
+        </p>
+      </div>
+      <div class="top-pill">1 hour = 12 × 5 min</div>
+    </header>
+
+    <div class="layout">
+      <section class="clock-card glass">
+        <div class="clock-wrap">
+          <svg viewBox="0 0 500 500"
+               role="img"
+               aria-label="Clock with twelve five-minute sections">
+            <circle cx="250" cy="250" r="206"
+                    fill="#101a2c"
+                    stroke="#31415a"/>
+            <g id="ring"></g>
+            <g id="labels"></g>
+            <circle cx="250" cy="250" r="143"
+                    class="center-disc"/>
+          </svg>
+
+          <div class="clock-copy">
+            <div class="clock-eyebrow">Time remaining</div>
+            <div class="time" id="time">60:00</div>
+            <div class="clock-sub" id="step">Block 1 of 12</div>
+            <div class="timer-status">
+              <span class="status-dot"></span>
+              <span id="status">Ready to begin</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <button class="btn primary" id="play">
+            ▶ Start hour
+          </button>
+          <button class="btn" id="skip">
+            +5 min preview
+          </button>
+          <button class="btn" id="reset">
+            ↺ Reset
+          </button>
+        </div>
+
+        <p class="hint">
+          Start for a real countdown.
+          Use +5 min preview to skip ahead.
+        </p>
+      </section>
+
+      <aside class="side glass">
+        <div class="section-label">Your progress</div>
+        <h2>12 small wins.</h2>
+        <p class="description">
+          Each box is just five minutes.
+          Complete all twelve and you've finished an hour.
+        </p>
+
+        <div class="metric">
+          <strong id="completeCount">0 / 12</strong>
+          <span>blocks completed</span>
+        </div>
+
+        <div class="progress-track" id="progress"
+             role="progressbar" aria-valuemin="0"
+             aria-valuemax="100" aria-valuenow="0">
+          <div class="progress-fill" id="fill"></div>
+        </div>
+
+        <div class="grid" id="blocks"></div>
+
+        <div class="message">
+          <strong>Focus rule</strong>
+          <div id="message">
+            You don't need to conquer 60 minutes right now.
+            Just start your first five.
+          </div>
+        </div>
+
+        <div class="copy-row">
+          <span>Built with HTML + CSS + JavaScript</span>
+          <button class="copy-btn" id="copy">
+            ⧉ Copy all code
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <p class="footer">
+      One tiny action × twelve rounds = one focused hour.
+    </p>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      // Store the original HTML before adding dynamic elements.
+      const originalSource =
+        "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
+      const TOTAL = 3600;
+      const BLOCK = 300;
+
+      const ring = document.getElementById("ring");
+      const labels = document.getElementById("labels");
+      const blocks = document.getElementById("blocks");
+      const play = document.getElementById("play");
+      const skip = document.getElementById("skip");
+      const reset = document.getElementById("reset");
+      const time = document.getElementById("time");
+      const status = document.getElementById("status");
+      const step = document.getElementById("step");
+      const fill = document.getElementById("fill");
+      const progress = document.getElementById("progress");
+      const completeCount = document.getElementById("completeCount");
+      const message = document.getElementById("message");
+
+      let elapsed = 0;
+      let playing = false;
+      let startedAt = 0;
+      let elapsedAtStart = 0;
+
+      const ns = "http://www.w3.org/2000/svg";
+
+      function polar(radius, angle) {
+        return {
+          x: 250 + radius * Math.cos(angle * Math.PI / 180),
+          y: 250 + radius * Math.sin(angle * Math.PI / 180)
+        };
+      }
+
+      function arcPath(i) {
+        const a = -90 + i * 30 + 2.2;
+        const b = -90 + (i + 1) * 30 - 2.2;
+
+        const p1 = polar(197, a);
+        const p2 = polar(197, b);
+        const p3 = polar(148, b);
+        const p4 = polar(148, a);
+
+        return `M${p1.x},${p1.y}
+          A197,197 0 0 1 ${p2.x},${p2.y}
+          L${p3.x},${p3.y}
+          A148,148 0 0 0 ${p4.x},${p4.y} Z`;
+      }
+
+      const arcs = [];
+      const tiles = [];
+
+      // Create 12 sections on the clock.
+      for (let i = 0; i < 12; i++) {
+        const path = document.createElementNS(ns, "path");
+
+        path.setAttribute("d", arcPath(i));
+        path.setAttribute("class", "arc rest");
+        path.setAttribute("role", "button");
+        path.setAttribute("tabindex", "0");
+        path.setAttribute("aria-label",
+          `Preview completion of block ${i + 1}`);
+
+        const jump = () => setElapsed((i + 1) * BLOCK);
+
+        path.addEventListener("click", jump);
+        path.addEventListener("keydown", e => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            jump();
+          }
+        });
+
+        ring.appendChild(path);
+        arcs.push(path);
+
+        const pos = polar(226, -90 + i * 30);
+        const label = document.createElementNS(ns, "text");
+
+        label.setAttribute("x", pos.x);
+        label.setAttribute("y", pos.y + 5);
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("class", "numbers");
+        label.textContent = String(i * 5).padStart(2, "0");
+
+        labels.appendChild(label);
+
+        // Create 12 progress boxes.
+        const tile = document.createElement("button");
+        tile.type = "button";
+        tile.className = "block";
+        tile.innerHTML = `
+          <span class="num">${String(i + 1).padStart(2, "0")}</span>
+          <span class="small">5 MIN</span>
+        `;
+
+        tile.setAttribute("aria-label",
+          `Preview ${i + 1} completed blocks`);
+        tile.addEventListener("click", jump);
+
+        blocks.appendChild(tile);
+        tiles.push(tile);
+      }
+
+      function currentElapsed() {
+        return playing
+          ? Math.min(
+              TOTAL,
+              elapsedAtStart + (Date.now() - startedAt) / 1000
+            )
+          : elapsed;
+      }
+
+      function setElapsed(value) {
+        elapsed = Math.max(0, Math.min(TOTAL, value));
+        elapsedAtStart = elapsed;
+        startedAt = Date.now();
+
+        if (elapsed === TOTAL) playing = false;
+
+        update();
+      }
+
+      function update() {
+        const value = currentElapsed();
+
+        if (value === TOTAL && playing) {
+          playing = false;
+          elapsed = TOTAL;
+        }
+
+        const done = Math.min(12, Math.floor(value / BLOCK));
+        const remaining = Math.max(0, Math.ceil(TOTAL - value));
+
+        const minutes = String(Math.floor(remaining / 60))
+          .padStart(2, "0");
+        const seconds = String(remaining % 60)
+          .padStart(2, "0");
+
+        time.textContent = `${minutes}:${seconds}`;
+
+        step.textContent = done === 12
+          ? "All 12 blocks finished!"
+          : `Block ${done + 1} of 12`;
+
+        completeCount.textContent = `${done} / 12`;
+
+        fill.style.width = `${value / TOTAL * 100}%`;
+
+        progress.setAttribute(
+          "aria-valuenow",
+          String(Math.round(value / TOTAL * 100))
+        );
+
+        status.textContent = done === 12
+          ? "Hour complete!"
+          : playing
+            ? "Focus in progress"
+            : value > 0
+              ? "Paused — keep going"
+              : "Ready to begin";
+
+        play.textContent = playing
+          ? "Ⅱ Pause"
+          : done === 12
+            ? "✓ Finished"
+            : value > 0
+              ? "▶ Resume"
+              : "▶ Start hour";
+
+        play.disabled = done === 12;
+        skip.disabled = done === 12;
+
+        message.textContent = done === 12
+          ? "You did it! Twelve blocks make one full hour."
+          : done > 0
+            ? `Great progress! ${done} small wins finished. Focus on the next five minutes.`
+            : "You don't need to conquer 60 minutes right now. Just start your first five.";
+
+        arcs.forEach((arc, i) => {
+          arc.setAttribute(
+            "class",
+            `arc ${i < done ? "done" : i === done ? "current" : "rest"}`
+          );
+        });
+
+        tiles.forEach((tile, i) => {
+          tile.className =
+            `block ${i < done ? "done" : i === done ? "now" : ""}`;
+
+          tile.querySelector(".small").textContent =
+            i < done ? "✓ DONE" : "5 MIN";
+        });
+      }
+
+      // Start / Pause / Resume
+      play.addEventListener("click", () => {
+        if (playing) {
+          elapsed = currentElapsed();
+          playing = false;
+        } else if (elapsed < TOTAL) {
+          playing = true;
+          elapsedAtStart = elapsed;
+          startedAt = Date.now();
+        }
+
+        update();
+      });
+
+      // Preview next five-minute block.
+      skip.addEventListener("click", () => {
+        setElapsed(
+          (Math.floor(currentElapsed() / BLOCK) + 1) * BLOCK
+        );
+      });
+
+      // Reset timer.
+      reset.addEventListener("click", () => {
+        playing = false;
+        setElapsed(0);
+      });
+
+      // Refresh countdown display.
+      setInterval(() => {
+        if (playing) update();
+      }, 200);
+
+      // Copy full website source.
+      document.getElementById("copy").addEventListener(
+        "click",
+        async () => {
+          const btn = document.getElementById("copy");
+
+          try {
+            await navigator.clipboard.writeText(originalSource);
+            btn.textContent = "✓ Code copied!";
+          } catch (error) {
+            btn.textContent = "Copy blocked — select code manually";
+          }
+
+          setTimeout(() => {
+            btn.textContent = "⧉ Copy all code";
+          }, 2500);
+        }
+      );
+
+      update();
+    })();
+  </script>
+</body>
+</html>
